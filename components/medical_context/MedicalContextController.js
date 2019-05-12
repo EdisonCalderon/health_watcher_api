@@ -1,14 +1,15 @@
-import r from 'rethinkdb';
-import db from '../../config/database';
-import MedicalContext from "./MedicalContext";
+import r from 'rethinkdb'
+import db from '../../config/database'
+import MedicalContext from "./MedicalContext"
+import { UserError } from '../../helpers/UserError'
 
-const init = Symbol();
-let medical_contexts = Symbol();
+const init = Symbol()
+let medical_contexts = Symbol()
 
 class MedicalContextController {
     constructor() {
-        this[medical_contexts] = {};
-        this[init]();
+        this[medical_contexts] = {}
+        this[init]()
     }
 
     async [init]() {
@@ -25,9 +26,9 @@ class MedicalContextController {
     }
 
     getContext = (id) => {
-        var ref = this[medical_contexts][id];
-        if (ref) return ref;
-        if (!ref) throw new Error("Context do not exists");
+        var ref = this[medical_contexts][id]
+        if (ref) return ref
+        if (!ref) throw new UserError("Context do not exists")
     }
 }
 

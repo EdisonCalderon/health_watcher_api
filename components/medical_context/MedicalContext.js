@@ -2,6 +2,7 @@ import r from 'rethinkdb'
 import db from '../../config/database'
 import Sensor from "./Sensor"
 import Actuator from "./Actuator"
+import { UserError } from '../../helpers/UserError'
 
 const id = Symbol()
 const name = Symbol()
@@ -59,13 +60,13 @@ class MedicalContext {
     getSensor(id) {
         var ref = this[sensors_list][id];
         if (ref) return ref;
-        if (!ref) throw new Error("Sensor do not exists")
+        if (!ref) throw new UserError("Sensor do not exists")
     }
 
     getActuator(id) {
         var ref = this[actuators_list][id];
         if (ref) return ref;
-        if (!ref) throw new Error("Actuator do not exists")
+        if (!ref) throw new UserError("Actuator do not exists")
     }
 }
 

@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi from 'joi'
 
 const measurement = Joi.object().keys({
     value: Joi.number().min(0).required(),
@@ -20,4 +20,4 @@ const MeasurementSchemaV2 = Joi.object().keys({
     devices: Joi.array().items(device)
 })
 
-export { MeasurementSchemaV1, MeasurementSchemaV2 };
+export { MeasurementSchemaV1, MeasurementSchemaV2 }

@@ -1,5 +1,6 @@
 import r from 'rethinkdb'
 import db from '../../config/database'
+import { UserError } from '../../helpers/UserError'
 
 const id = Symbol()
 const context = Symbol()
@@ -23,18 +24,20 @@ class Sensor {
         });
     }
 
-    addMeasurement(measurements) {
+    async addMeasurements(measurements) {
         const _this = this
         try {
-            let areValid = measurements.every(x => { return x.sensor = _this.id && x.measurements != undefined && x.timestamp })
-            if (!areValid) throw new Error('There are invalid measurements')
-            return await r.db(process.env.DB_NAME).table('measurement')
+            let areValid = measurements.every(x => { return x.value != undefined && x.timestamp })
+            if (!areValid) throw new UserError('There are invalid measurements')
+            measurements.map(x => x.sensor = _this[id])
+            const connection = await db.createConnection();
+            return await r.db(process.env.DB_NAME).table('measurement').insert(measurements)
                 .run(connection)
-                .then(result => { return result })
+                .then(result => { return result.inserted })
                 .catch(error => { throw error })
                 .finally(() => { connection.close() })
         } catch (error) {
-            throw error;
+            throw error
         }
     }
 }
