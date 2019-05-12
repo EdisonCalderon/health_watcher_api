@@ -6,6 +6,7 @@ const id = Symbol()
 const context = Symbol()
 const name = Symbol()
 const startSocket = Symbol()
+const listenForMeasurements = Symbol()
 
 class Sensor {
     constructor(info) {
@@ -13,6 +14,7 @@ class Sensor {
         this[name] = info.name
         this[context] = info.context
         this[startSocket]()
+        this[listenForMeasurements]()
     }
 
     [startSocket]() {
@@ -22,6 +24,15 @@ class Sensor {
         this.nsp.on('connection', function (socket) {
             console.log(`someone connected to: ${_this[context]}_${_this[id]}`)
         });
+    }
+
+    async [listenForMeasurements]() {
+        const connection = await db.createConnection()
+        r.db(process.env.DB_NAME).table('measurement').getAll(this[id], { index: 'sensor' })
+            .changes().filter(r.row('old_val').eq(null))
+            .run(connection)
+            .then(cursor => cursor.each((e, m) => { if (!e) this.nsp.emit('measurement', m.new_val) }))
+            .catch(error => console.log(error))
     }
 
     async addMeasurements(measurements) {
