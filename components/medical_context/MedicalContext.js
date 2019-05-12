@@ -23,7 +23,7 @@ class MedicalContext {
         this[initActuators]()
     }
 
-    [startSocket] () {
+    [startSocket]() {
         const io = global.io
         const nsp = io.of(`/${this[id]}`)
         nsp.on('connection', function (socket) {
@@ -33,12 +33,12 @@ class MedicalContext {
 
     async [initSensors]() {
         const connection = await db.createConnection();
-        await r.db(process.env.DB_NAME).table('sensor').getAll(this[id], { index: 'context'})
+        await r.db(process.env.DB_NAME).table('sensor').getAll(this[id], { index: 'context' })
             .run(connection)
             .then(cursor => cursor.toArray())
             .then(result => { result.map(s => { this[sensors_list][s.id] = new Sensor(s) }) })
 
-        r.db(process.env.DB_NAME).table('sensor').getAll(this[id], { index: 'context'}).changes().filter(r.row('old_val').eq(null))
+        r.db(process.env.DB_NAME).table('sensor').getAll(this[id], { index: 'context' }).changes().filter(r.row('old_val').eq(null))
             .run(connection)
             .then(cursor => cursor.each(s => { this[sensors_list][s.id] = new Sensor(s) }))
             .catch(error => console.log(error))
@@ -46,14 +46,14 @@ class MedicalContext {
 
     async [initActuators]() {
         const connection = await db.createConnection();
-        await r.db(process.env.DB_NAME).table('actuator').getAll(this[id], { index: 'context'})
+        await r.db(process.env.DB_NAME).table('actuator').getAll(this[id], { index: 'context' })
             .run(connection)
             .then(cursor => cursor.toArray())
             .then(result => { result.map(a => { this[actuators_list][a.id] = new Actuator(a) }) })
 
-        r.db(process.env.DB_NAME).table('actuator').getAll(this[id], { index: 'context'}).changes().filter(r.row('old_val').eq(null))
+        r.db(process.env.DB_NAME).table('actuator').getAll(this[id], { index: 'context' }).changes().filter(r.row('old_val').eq(null))
             .run(connection)
-            .then(cursor => cursor.each(a => { this[actuators_list][a.id] = new Actuator(a) }))
+            .then(cursor => cursor.each((e, a) => { if (!e) this[actuators_list][a.id] = new Actuator(a) }))
             .catch(error => console.log(error))
     }
 
@@ -67,6 +67,17 @@ class MedicalContext {
         var ref = this[actuators_list][id];
         if (ref) return ref;
         if (!ref) throw new UserError("Actuator do not exists")
+    }
+
+    getIdentity() {
+        return { id: this[id], name: this[name] }
+    }
+
+    getContextDetail() {
+        let response = this.getIdentity()
+        response.sensors = Object.keys(this[sensors_list]).map(x => { return this[sensors_list][x].getIdentity() })
+        response.actuators = Object.keys(this[actuators_list]).map(x => { return this[actuators_list][x].getIdentity() })
+        return response
     }
 }
 

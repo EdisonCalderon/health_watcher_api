@@ -51,6 +51,10 @@ class Sensor {
             throw error
         }
     }
+
+    getIdentity() { 
+        return { id: this[id], name: this[name] }
+    }
 }
 
 export default Sensor

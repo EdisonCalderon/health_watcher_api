@@ -11,6 +11,10 @@ class Actuator {
         this[name] = info.name;
         this[context] = context_ref;     
     }
+
+    getIdentity() { 
+        return { id: this[id], name: this[name] }
+    }
 }
 
 export default Actuator

@@ -21,7 +21,7 @@ class MedicalContextController {
 
         r.db(process.env.DB_NAME).table('context').changes().filter(r.row('old_val').eq(null))
             .run(connection)
-            .then(cursor => cursor.each(c => { this[medical_contexts][c.id] = new MedicalContext(c) }))
+            .then(cursor => cursor.each((e, c) => { if (!e) this[medical_contexts][c.id] = new MedicalContext(c) }))
             .catch(error => console.log(error))
     }
 
@@ -29,6 +29,10 @@ class MedicalContextController {
         var ref = this[medical_contexts][id]
         if (ref) return ref
         if (!ref) throw new UserError("Context do not exists")
+    }
+
+    getContextsBasicData = () => {
+        return Object.keys(this[medical_contexts]).map(x => { return this[medical_contexts][x].getIdentity() })
     }
 }
 
