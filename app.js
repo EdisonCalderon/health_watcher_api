@@ -22,10 +22,9 @@ app.use(passport.session());
 
 app.use('/', router);
 
-
 const log = log4js.getLogger("app");
 app.use((err, req, res, next) => {
-    if (err instanceof UserError || ['ValidationError', 'CastError'].includes(err.name)) {
+    if (err instanceof UserError) {
         res.status(400).send({ error: err.message, details: err.details });
     } else {
         log.error(err);
