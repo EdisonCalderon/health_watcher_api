@@ -1,7 +1,7 @@
 import MedicalContextController from '../medical_context/MedicalContextController'
 
 const getContextsList = () => {
-    return MedicalContextController.getContextsData()
+    return MedicalContextController.getContextsBasicData()
 }
 
 const getContextDetail = (context_id) => {

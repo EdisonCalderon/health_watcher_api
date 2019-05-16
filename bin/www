@@ -7,8 +7,6 @@ require('babel-core/register');
 require('babel-polyfill');
 require('dotenv').config()
 
-const io = require('socket.io');
-global.io = io.listen(3002);
 const http = require('http');
 const app = require('../app').default;
 
@@ -29,6 +27,8 @@ app.set('port', port);
  */
 
 const server = http.createServer(app);
+global.io = require('socket.io')(server);
+//global.io = io.listen(3002);
 
 /**
  * Listen on provided port, on all network interfaces.
