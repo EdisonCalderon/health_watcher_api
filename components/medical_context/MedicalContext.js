@@ -1,16 +1,20 @@
 import r from 'rethinkdb'
+import path from 'path'
 import db from '../../config/database'
 import Sensor from "./Sensor"
 import Actuator from "./Actuator"
 import { UserError } from '../../helpers/UserError'
+import awsIot from 'aws-iot-device-sdk'
 
 const id = Symbol()
 const name = Symbol()
+const aws = Symbol()
 const sensors_list = Symbol()
 const actuators_list = Symbol()
 const startSocket = Symbol()
 const initSensors = Symbol()
 const initActuators = Symbol()
+const subscribeMQTT = Symbol()
 
 class MedicalContext {
     constructor(info) {
@@ -18,7 +22,9 @@ class MedicalContext {
         this[actuators_list] = {}
         this[id] = info.id
         this[name] = info.name
+        this[aws] = info.aws
         this[startSocket]()
+        this[subscribeMQTT]()
         this[initSensors]()
         this[initActuators]()
     }
@@ -28,6 +34,28 @@ class MedicalContext {
         const nsp = io.of(`/${this[id]}`)
         nsp.on('connection', function (socket) {
             console.log(`someone connected to: ${this[id]}`)
+        });
+    }
+
+    [subscribeMQTT]() {
+        const id_context = this[id];
+        const aws_data = this[aws];
+        if (!aws_data) return
+        
+        var device = awsIot.device({
+            keyPath: path.join(__dirname, `../../config/certificates/${id_context}/${aws_data.keyPath}`),
+            certPath: path.join(__dirname, `../../config/certificates/${id_context}/${aws_data.certPath}`),
+            caPath: path.join(__dirname, `../../config/certificates/rootCA.pem`),
+            clientId: aws_data.clientId,
+            host: aws_data.host
+        });
+
+        device.on('connect', function () {
+            device.subscribe(`$aws/things/${aws_data.clientId}/shadow/update`);
+        });
+
+        device.on('message', function (topic, payload) {
+            console.log('message', topic, payload.toString());
         });
     }
 
