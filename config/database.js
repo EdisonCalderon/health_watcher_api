@@ -5,7 +5,7 @@ import r from 'rethinkdb'
 var config = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || '28015',
-    db: process.env.DB_NAME || 'gestor_medico'
+    db: process.env.DB_NAME || 'health_watcher'
 }
 
 const createConnection = async () => {

@@ -3,6 +3,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import log4js from 'log4js';
 import passport from "passport";
+import cors from 'cors';
 
 import router from './config/routes';
 import passport_init from './config/passport';
@@ -19,6 +20,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(cors())
 
 app.use('/', router);
 
