@@ -38,6 +38,7 @@ class Sensor {
     async addMeasurements(measurements) {
         const _this = this
         try {
+            measurements = measurements.map(x => { return { ...x, timestamp: x.timestamp ? x.timestamp : Date.now() } })
             let areValid = measurements.every(x => { return x.value != undefined && x.timestamp })
             if (!areValid) throw new UserError('There are invalid measurements')
             measurements.map(x => x.sensor = _this[id])
@@ -52,7 +53,7 @@ class Sensor {
         }
     }
 
-    getIdentity() { 
+    getIdentity() {
         return { id: this[id], name: this[name] }
     }
 }
