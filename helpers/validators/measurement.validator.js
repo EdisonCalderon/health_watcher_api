@@ -1,8 +1,9 @@
 import Joi from 'joi'
 
 const measurement = Joi.object().keys({
-    value: Joi.number().min(0).required(),
-    timestamp: Joi.number().min(1556826913569).required()
+    signal: Joi.number().min(0).required(),
+    value: Joi.number().min(0),
+    timestamp: Joi.number().min(1556826913569)
 })
 
 const device = Joi.object().keys({
@@ -20,4 +21,11 @@ const MeasurementSchemaV2 = Joi.object().keys({
     devices: Joi.array().items(device)
 })
 
-export { MeasurementSchemaV1, MeasurementSchemaV2 }
+const MeasurementSchemaV3 = Joi.object().keys({
+    context_id: Joi.string().required(),
+    device: measurement.append({
+        id: Joi.string().required()
+    })
+})
+
+export { MeasurementSchemaV1, MeasurementSchemaV2, MeasurementSchemaV3 }

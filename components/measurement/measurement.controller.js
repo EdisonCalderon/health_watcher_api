@@ -2,14 +2,15 @@ import Joi from 'joi'
 import { UserError } from '../../helpers/UserError'
 import MedicalContextController from '../medical_context/MedicalContextController'
 
-import { MeasurementSchemaV1, MeasurementSchemaV2 } from '../../helpers/validators/measurement.validator'
+import { MeasurementSchemaV1, MeasurementSchemaV2, MeasurementSchemaV3 } from '../../helpers/validators/measurement.validator'
 
 const reportMeasurements = async (data, version) => {
     try {
-        var validations = (version === 1) ? Joi.validate(data, MeasurementSchemaV1) : Joi.validate(data, MeasurementSchemaV2)
+        var validations = (version === 1) ? Joi.validate(data, MeasurementSchemaV1) :
+            (version === 2) ? Joi.validate(data, MeasurementSchemaV2) : Joi.validate(data, MeasurementSchemaV3)
         if (validations.error) throw new UserError("Ivalid measurements data", validations.error.details)
         var registers = validations.value
-        if (version === 1) registers.devices = [registers.device]
+        if (version === 1 || version ===3) registers.devices = [registers.device]
         let result = {}
         await Promise.all(registers.devices.map(async (device) => {
             await MedicalContextController
