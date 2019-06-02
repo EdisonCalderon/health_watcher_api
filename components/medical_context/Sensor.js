@@ -39,7 +39,7 @@ class Sensor {
         const _this = this
         try {
             measurements = measurements.map(x => { return { ...x, timestamp: x.timestamp ? x.timestamp : Date.now() } })
-            let areValid = measurements.every(x => { return x.value != undefined && x.timestamp })
+            let areValid = measurements.every(x => { return x.signal != undefined && x.timestamp })
             if (!areValid) throw new UserError('There are invalid measurements')
             measurements.map(x => x.sensor = _this[id])
             const connection = await db.createConnection();
