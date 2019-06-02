@@ -38,7 +38,8 @@ class Sensor {
     async addMeasurements(measurements) {
         const _this = this
         try {
-            let areValid = measurements.every(x => { return x.value != undefined && x.timestamp })
+            measurements = measurements.map(x => { return { ...x, timestamp: x.timestamp ? x.timestamp : Date.now() } })
+            let areValid = measurements.every(x => { return x.signal != undefined && x.timestamp })
             if (!areValid) throw new UserError('There are invalid measurements')
             measurements.map(x => x.sensor = _this[id])
             const connection = await db.createConnection();
@@ -52,7 +53,7 @@ class Sensor {
         }
     }
 
-    getIdentity() { 
+    getIdentity() {
         return { id: this[id], name: this[name] }
     }
 }

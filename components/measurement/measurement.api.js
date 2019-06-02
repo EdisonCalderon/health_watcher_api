@@ -20,4 +20,13 @@ router.post('/v2', async (req, res, next) => {
     }
 });
 
+router.post('/v3', async (req, res, next) => {
+    try {
+        const response = await MeasurementController.reportMeasurements(req.body, 3);
+        return res.json(response);
+    } catch (error) {
+        return next(error);
+    }
+});
+
 export default router;
