@@ -12,6 +12,7 @@ import { MeasurementSchemaV3 } from '../../helpers/validators/measurement.valida
 const id = Symbol()
 const name = Symbol()
 const aws = Symbol()
+const enabled = Symbol()
 const sensors_list = Symbol()
 const actuators_list = Symbol()
 const startSocket = Symbol()
@@ -27,6 +28,7 @@ class MedicalContext {
         this[id] = info.id
         this[name] = info.name
         this[aws] = info.aws
+        this[enabled] = info.enabled
         this[startSocket]()
         this[subscribeMQTT]()
         this[initSensors]()
@@ -126,7 +128,7 @@ class MedicalContext {
     }
 
     getIdentity() {
-        return { id: this[id], name: this[name], aws: this[aws] }
+        return { id: this[id], name: this[name], aws: this[aws], enabled: this[enabled] }
     }
 
     getContextDetail() {
@@ -134,6 +136,11 @@ class MedicalContext {
         response.sensors = Object.keys(this[sensors_list]).map(x => { return this[sensors_list][x].getIdentity() })
         response.actuators = Object.keys(this[actuators_list]).map(x => { return this[actuators_list][x].getIdentity() })
         return response
+    }
+
+    async update(data) {
+        console.log("Update requested", data)
+        return Promise.resolve("OK")
     }
 }
 
