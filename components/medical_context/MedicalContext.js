@@ -51,12 +51,20 @@ class MedicalContext {
             keyPath: path.join(__dirname, `../../config/certificates/${id_context}/${aws_data.keyPath}`),
             certPath: path.join(__dirname, `../../config/certificates/${id_context}/${aws_data.certPath}`),
             caPath: path.join(__dirname, `../../config/certificates/rootCA.pem`),
-            clientId: aws_data.clientId,
+            clientId: require('uuid/v4')(),
             host: aws_data.host
         });
 
         device.on('connect', function () {
-            device.subscribe(`$aws/things/${aws_data.clientId}/shadow/update/out`);
+            device.subscribe(`${aws_data.clientId}/out`);
+        });
+
+        device.on('disconnected', function () {
+            console.log('disconnected')
+        });
+        
+        device.on('disconnect', function () {
+            console.log('disconnect')
         });
 
         device.on('message', function (topic, payload) {
