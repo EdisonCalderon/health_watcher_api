@@ -15,6 +15,8 @@ const aws = Symbol()
 const enabled = Symbol()
 const sensors_list = Symbol()
 const actuators_list = Symbol()
+const device = Symbol()
+
 const startSocket = Symbol()
 const initSensors = Symbol()
 const initActuators = Symbol()
@@ -49,7 +51,7 @@ class MedicalContext {
         const aws_data = this[aws];
         if (!aws_data) return
 
-        var device = awsIot.device({
+        var device_iot = awsIot.device({
             keyPath: path.join(__dirname, `../../config/certificates/${id_context}/${aws_data.keyPath}`),
             certPath: path.join(__dirname, `../../config/certificates/${id_context}/${aws_data.certPath}`),
             caPath: path.join(__dirname, `../../config/certificates/rootCA.pem`),
@@ -57,19 +59,21 @@ class MedicalContext {
             host: aws_data.host
         });
 
-        device.on('connect', function () {
-            device.subscribe(`${aws_data.clientId}/out`);
+        this[device] = device_iot
+
+        device_iot.on('connect', function () {
+            device_iot.subscribe(`${aws_data.clientId}/out`);
         });
 
-        device.on('disconnected', function () {
+        device_iot.on('disconnected', function () {
             console.log('disconnected')
         });
-        
-        device.on('disconnect', function () {
+
+        device_iot.on('disconnect', function () {
             console.log('disconnect')
         });
 
-        device.on('message', function (topic, payload) {
+        device_iot.on('message', function (topic, payload) {
             payload = JSON.parse(payload.toString())
             var validations = Joi.validate(payload, MeasurementSchemaV3)
             if (validations.error) return handleError('Invalid Data', { type: 'sensor', id: payload.device.id })
@@ -80,9 +84,23 @@ class MedicalContext {
                 .catch(error => _this[handleError]('Invalid Data', { type: 'sensor', id }, error))
         });
 
-        device.on('error', (error) => {
+        device_iot.on('error', (error) => {
             console.log(`[Context: ${id_context}] Error cliente MQTT`)
         })
+    }
+
+    async notifyDevice(action, object_id) {
+        const type = (object_id === this[id]) ? 'context' :
+            (Object.keys(this[actuators_list]).includes(object_id)) ? 'actuator' :
+                (Object.keys(this[sensors_list]).includes(object_id)) ? 'sensor' : null
+        if (!type) throw new UserError("Sensor do not exists")
+        const payload = {
+            object: type,
+            identifier: (type !== 'context') ? object_id : undefined,
+            action
+        }
+        const topic = `${this[aws].clientId}/in`
+        this[device].publish(topic, JSON.stringify(payload))
     }
 
     async [initSensors]() {
@@ -139,8 +157,11 @@ class MedicalContext {
     }
 
     async update(data) {
-        console.log("Update requested", data)
-        return Promise.resolve("OK")
+        var actionToNotify = (data.enabled) ? 'start' : 'stop'
+        await this.notifyDevice(actionToNotify, this[id])
+        const connection = await db.createConnection();
+        return await r.db(process.env.DB_NAME).table('context').get(this[id]).update(data)
+            .run(connection)
     }
 }
 
