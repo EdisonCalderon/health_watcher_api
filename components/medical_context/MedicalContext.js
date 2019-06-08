@@ -6,6 +6,7 @@ import db from '../../config/database'
 import Sensor from "./Sensor"
 import Actuator from "./Actuator"
 import { UserError } from '../../helpers/UserError'
+import SNS from '../../helpers/providers/sns.aws'
 
 import { MeasurementSchemaV3 } from '../../helpers/validators/measurement.validator'
 
@@ -16,6 +17,7 @@ const enabled = Symbol()
 const sensors_list = Symbol()
 const actuators_list = Symbol()
 const device = Symbol()
+const sns_service = Symbol()
 
 const startSocket = Symbol()
 const initSensors = Symbol()
@@ -33,6 +35,7 @@ class MedicalContext {
         this[subscribeMQTT]()
         this[initSensors]()
         this[initActuators]()
+        if (this[aws] && this[aws].topicSNS) this[sns_service] = new SNS(this[aws].topicSNS)
     }
 
     setInfo(info) {
@@ -190,7 +193,7 @@ class MedicalContext {
     }
 
     notifyAlert(text) {
-        console.log("NOTIFICAR", text)
+        this[sns_service] && this[sns_service].publishMessage(text)
         const alert_actuators = this.getActuatorsByRol('ALERT')
         alert_actuators.map(x => x.update({ enabled: true }))
         setTimeout(() => alert_actuators.map(x => x.update({ enabled: false })), 1000 * 60 * 3)
