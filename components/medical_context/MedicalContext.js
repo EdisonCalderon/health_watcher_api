@@ -27,14 +27,18 @@ class MedicalContext {
     constructor(info) {
         this[sensors_list] = {}
         this[actuators_list] = {}
-        this[id] = info.id
-        this[name] = info.name
-        this[aws] = info.aws
-        this[enabled] = info.enabled
+        this.setInfo(info)
         this[startSocket]()
         this[subscribeMQTT]()
         this[initSensors]()
         this[initActuators]()
+    }
+
+    setInfo(info) {
+        this[id] = info.id
+        this[name] = info.name
+        this[aws] = info.aws
+        this[enabled] = info.enabled
     }
 
     [startSocket]() {
@@ -90,6 +94,7 @@ class MedicalContext {
     }
 
     async notifyDevice(action, object_id) {
+        if (!this[aws]) return
         const type = (object_id === this[id]) ? 'context' :
             (Object.keys(this[actuators_list]).includes(object_id)) ? 'actuator' :
                 (Object.keys(this[sensors_list]).includes(object_id)) ? 'sensor' : null
@@ -158,7 +163,7 @@ class MedicalContext {
 
     async update(data) {
         var actionToNotify = (data.enabled) ? 'start' : 'stop'
-        await this.notifyDevice(actionToNotify, this[id])
+        this.notifyDevice(actionToNotify, this[id])
         const connection = await db.createConnection();
         return await r.db(process.env.DB_NAME).table('context').get(this[id]).update(data)
             .run(connection)

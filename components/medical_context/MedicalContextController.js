@@ -6,6 +6,8 @@ import { UserError } from '../../helpers/UserError'
 const init = Symbol()
 let medical_contexts = Symbol()
 
+let handleChange = Symbol()
+
 class MedicalContextController {
     constructor() {
         this[medical_contexts] = {}
@@ -19,10 +21,20 @@ class MedicalContextController {
             .then(cursor => cursor.toArray())
             .then(result => { result.map(c => { this[medical_contexts][c.id] = new MedicalContext(c) }) })
 
-        r.db(process.env.DB_NAME).table('context').changes().filter(r.row('old_val').eq(null))
+        r.db(process.env.DB_NAME).table('context').changes()
             .run(connection)
-            .then(cursor => cursor.each((e, c) => { if (!e) this[medical_contexts][c.id] = new MedicalContext(c) }))
+            .then(cursor => cursor.each((e, c) => { if (!e) this[handleChange](c) }))
             .catch(error => console.log(error))
+    }
+
+    [handleChange](context) {
+        if (context.old_val == null) {
+            this[medical_contexts][context.new_val.id] = new MedicalContext(c)
+        }
+        else if (context.old_val != null && context.new_val != null) {
+            var context_instance = this[medical_contexts][context.new_val.id]
+            context_instance.setInfo(context.new_val)
+        }
     }
 
     getContext = (id) => {
