@@ -76,11 +76,11 @@ class MedicalContext {
         device_iot.on('message', function (topic, payload) {
             payload = JSON.parse(payload.toString())
             var validations = Joi.validate(payload, MeasurementSchemaV3)
-            if (validations.error) return handleError('Invalid Data', { type: 'sensor', id: payload.device.id })
+            if (validations.error) return _this[handleError]('Invalid Data', { type: 'sensor', id: payload.device.id })
             var register = validations.value
-            var { signal, value, id } = register.device
+            var { signal, id } = register.device
             _this.getSensor(id)
-                .addMeasurements([{ signal, value }])
+                .addMeasurements([{ signal }])
                 .catch(error => _this[handleError]('Invalid Data', { type: 'sensor', id }, error))
         });
 

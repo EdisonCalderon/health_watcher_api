@@ -10,7 +10,8 @@ const reportMeasurements = async (data, version) => {
             (version === 2) ? Joi.validate(data, MeasurementSchemaV2) : Joi.validate(data, MeasurementSchemaV3)
         if (validations.error) throw new UserError("Ivalid measurements data", validations.error.details)
         var registers = validations.value
-        if (version === 1 || version ===3) registers.devices = [registers.device]
+        if (version === 1) registers.devices = [registers.device]
+        if (version === 3) registers.devices = [{ id: registers.device.id, measurements: [{ signal: registers.device.signal }] }]
         let result = {}
         await Promise.all(registers.devices.map(async (device) => {
             await MedicalContextController
