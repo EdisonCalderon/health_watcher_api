@@ -6,10 +6,14 @@ const context = Symbol()
 const name = Symbol()
 
 class Actuator {
-    constructor(info, context_ref) {
-        this[id] = info.id;
-        this[name] = info.name;
-        this[context] = context_ref;     
+    constructor(info) {
+        this.setInfo(info)
+    }
+
+    setInfo(info) {
+        this[id] = info.id
+        this[name] = info.name
+        this[context] = info.context
     }
 
     getIdentity() { 

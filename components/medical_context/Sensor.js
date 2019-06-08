@@ -10,11 +10,15 @@ const listenForMeasurements = Symbol()
 
 class Sensor {
     constructor(info) {
+        this.setInfo(info)
+        this[startSocket]()
+        this[listenForMeasurements]()
+    }
+
+    setInfo(info) {
         this[id] = info.id
         this[name] = info.name
         this[context] = info.context
-        this[startSocket]()
-        this[listenForMeasurements]()
     }
 
     [startSocket]() {

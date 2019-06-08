@@ -22,6 +22,7 @@ const initSensors = Symbol()
 const initActuators = Symbol()
 const subscribeMQTT = Symbol()
 const handleError = Symbol()
+const handleChange = Symbol()
 
 class MedicalContext {
     constructor(info) {
@@ -132,6 +133,18 @@ class MedicalContext {
             .run(connection)
             .then(cursor => cursor.each((e, a) => { if (!e) this[actuators_list][a.id] = new Actuator(a) }))
             .catch(error => console.log(error))
+    }
+
+    [handleChange](device_payload, group) {
+        const device_group = (group == 'sensors') ? sensors_list : actuators_list
+        const device_class = (group == 'sensors') ? Sensor : Actuator
+        if (device_payload.old_val == null) {
+            this[device_group][device_payload.new_val.id] = new device_class(c)
+        }
+        else if (device_payload.old_val != null && device_payload.new_val != null) {
+            var device_instance = this[device_group][device_payload.new_val.id]
+            device_instance.setInfo(device_payload.new_val)
+        }
     }
 
     [handleError](error, device, err) {

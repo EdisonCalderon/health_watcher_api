@@ -4,9 +4,9 @@ import MedicalContext from "./MedicalContext"
 import { UserError } from '../../helpers/UserError'
 
 const init = Symbol()
-let medical_contexts = Symbol()
+const medical_contexts = Symbol()
 
-let handleChange = Symbol()
+const handleChange = Symbol()
 
 class MedicalContextController {
     constructor() {
