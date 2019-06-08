@@ -114,11 +114,11 @@ class MedicalContext {
         await r.db(process.env.DB_NAME).table('sensor').getAll(this[id], { index: 'context' })
             .run(connection)
             .then(cursor => cursor.toArray())
-            .then(result => { result.map(s => { this[sensors_list][s.id] = new Sensor(s) }) })
+            .then(result => { result.map(s => { this[sensors_list][s.id] = new Sensor(s, this) }) })
 
-        r.db(process.env.DB_NAME).table('sensor').getAll(this[id], { index: 'context' }).changes().filter(r.row('old_val').eq(null))
+        r.db(process.env.DB_NAME).table('sensor').getAll(this[id], { index: 'context' }).changes()
             .run(connection)
-            .then(cursor => cursor.each(s => { this[sensors_list][s.id] = new Sensor(s) }))
+            .then(cursor => cursor.each((e, s) => { if (!e) this[handleChange](s, 'sensors') }))
             .catch(error => console.log(error))
     }
 
@@ -127,11 +127,11 @@ class MedicalContext {
         await r.db(process.env.DB_NAME).table('actuator').getAll(this[id], { index: 'context' })
             .run(connection)
             .then(cursor => cursor.toArray())
-            .then(result => { result.map(a => { this[actuators_list][a.id] = new Actuator(a) }) })
+            .then(result => { result.map(a => { this[actuators_list][a.id] = new Actuator(a, this) }) })
 
-        r.db(process.env.DB_NAME).table('actuator').getAll(this[id], { index: 'context' }).changes().filter(r.row('old_val').eq(null))
+        r.db(process.env.DB_NAME).table('actuator').getAll(this[id], { index: 'context' }).changes()
             .run(connection)
-            .then(cursor => cursor.each((e, a) => { if (!e) this[actuators_list][a.id] = new Actuator(a) }))
+            .then(cursor => cursor.each((e, a) => { if (!e) this[handleChange](a, 'actuators') }))
             .catch(error => console.log(error))
     }
 
@@ -139,7 +139,7 @@ class MedicalContext {
         const device_group = (group == 'sensors') ? sensors_list : actuators_list
         const device_class = (group == 'sensors') ? Sensor : Actuator
         if (device_payload.old_val == null) {
-            this[device_group][device_payload.new_val.id] = new device_class(c)
+            this[device_group][device_payload.new_val.id] = new device_class(c, this)
         }
         else if (device_payload.old_val != null && device_payload.new_val != null) {
             var device_instance = this[device_group][device_payload.new_val.id]
@@ -163,6 +163,13 @@ class MedicalContext {
         if (!ref) throw new UserError("Actuator do not exists")
     }
 
+    getActuatorsByRol(rol) {
+        var list = this[actuators_list]
+        return Object.keys(list)
+            .filter(x => { return list[x].getRoles().includes(rol) })
+            .map(x => list[x])
+    }
+
     getIdentity() {
         return { id: this[id], name: this[name], aws: this[aws], enabled: this[enabled] }
     }
@@ -180,6 +187,13 @@ class MedicalContext {
         const connection = await db.createConnection();
         return await r.db(process.env.DB_NAME).table('context').get(this[id]).update(data)
             .run(connection)
+    }
+
+    notifyAlert(text) {
+        console.log("NOTIFICAR", text)
+        const alert_actuators = this.getActuatorsByRol('ALERT')
+        alert_actuators.map(x => x.update({ enabled: true }))
+        setTimeout(() => alert_actuators.map(x => x.update({ enabled: false })), 1000 * 60 * 3)
     }
 }
 
