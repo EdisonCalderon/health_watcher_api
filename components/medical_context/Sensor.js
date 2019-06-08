@@ -6,6 +6,7 @@ import { UserError } from '../../helpers/UserError'
 const id = Symbol()
 const context = Symbol()
 const name = Symbol()
+const units = Symbol()
 const enabled = Symbol()
 const constraints = Symbol()
 const lastIncident = Symbol()
@@ -29,6 +30,7 @@ class Sensor {
         this[id] = info.id
         this[context] = info.context
         this[name] = info.name
+        this[units] = info.units
         this[enabled] = info.enabled
         this[constraints] = info.constraints
         this[lastIncident] = info.lastIncident
@@ -70,6 +72,7 @@ class Sensor {
             this.update({ lastNotification: now })
             const complement = (type === 'MAX') ? 'encima' : 'debajo'
             const template = `El sensor ${this[name]} está reportando valores por ${complement} de lo normal`
+            this.nsp.emit('anomalia', template)
             this[context_ref].notifyAlert(template)
         }
     }
@@ -93,7 +96,7 @@ class Sensor {
     }
 
     getIdentity() {
-        return { id: this[id], name: this[name] }
+        return { id: this[id], name: this[name], units: this[units] }
     }
 
     async update(data) {
